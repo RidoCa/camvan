@@ -4,11 +4,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:syncfusion_flutter_datepicker/datepicker.dart';
-import 'package:bookkursi/app/data/widget/sidebar.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+
+import 'package:bookkursi/app/data/widget/sidebar.dart';
 
 import '../controllers/booking_controller.dart';
+import 'bookinfo_view.dart';
 
 class BookingView extends GetView<BookingController> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
@@ -104,29 +106,8 @@ class BookingView extends GetView<BookingController> {
                                                   const EdgeInsets.symmetric(
                                                 horizontal: 30,
                                               ),
-                                              child: SfDateRangePicker(
-                                                headerHeight: 50,
-                                                headerStyle:
-                                                    DateRangePickerHeaderStyle(
-                                                  textAlign: TextAlign.center,
-                                                  textStyle: TextStyle(
-                                                    fontSize: 20,
-                                                    color: Color(0XFF4B3D70),
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                onSelectionChanged:
-                                                    (dateRangePickerSelectionChangedArgs) {},
-                                                minDate: DateTime.now(),
-                                                view: DateRangePickerView.month,
-                                                showNavigationArrow: true,
-                                                selectionColor:
-                                                    Color(0XFF6884EC),
-                                                todayHighlightColor:
-                                                    Color(0XFFD7DFFB),
-                                                selectionMode:
-                                                    DateRangePickerSelectionMode
-                                                        .single,
+                                              child: datepicker(
+                                                controller: controller,
                                               ),
                                             ),
                                             //button continue
@@ -172,22 +153,33 @@ class BookingView extends GetView<BookingController> {
                                       );
                                     });
                               },
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Select Date',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
+                              child: Obx(
+                                () => Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    controller.tmpdate == ''
+                                        ? Text(
+                                            'Select Date',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )
+                                        : Text(
+                                            controller.tmpdate.value,
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                    Image.asset(
+                                      'assets/icons/icon-calendar-dd.png',
                                     ),
-                                  ),
-                                  Image.asset(
-                                    'assets/icons/icon-calendar-dd.png',
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -393,7 +385,9 @@ class BookingView extends GetView<BookingController> {
                               horizontal: 32,
                             ),
                             child: InkWell(
-                              onTap: () => Get.back(),
+                              onTap: () => Get.to(
+                                BookinfoView(),
+                              ),
                               child: Center(
                                 child: Text(
                                   'Booking Room',
@@ -432,7 +426,10 @@ class BookingView extends GetView<BookingController> {
                   ),
                 );
               },
-            );
+            ).then((value) {
+              controller.selectedDate.value = '';
+              controller.tmpdate.value = '';
+            });
           },
           child: Icon(Icons.add),
         ),
@@ -487,6 +484,43 @@ class BookingView extends GetView<BookingController> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class datepicker extends StatelessWidget {
+  final BookingController controller;
+  const datepicker({
+    Key? key,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SfDateRangePicker(
+      headerHeight: 50,
+      headerStyle: DateRangePickerHeaderStyle(
+        textAlign: TextAlign.center,
+        textStyle: TextStyle(
+          fontSize: 20,
+          color: Color(0XFF4B3D70),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      onSelectionChanged: (dateRangePickerSelectionChangedArgs) {
+        controller.onSelectionChanged(dateRangePickerSelectionChangedArgs);
+      },
+      initialSelectedDate: controller.selectedDate == ''
+          ? null
+          : DateTime.parse(
+              controller.selectedDate.toString(),
+            ),
+      minDate: DateTime.now(),
+      view: DateRangePickerView.month,
+      showNavigationArrow: true,
+      selectionColor: Color(0XFF6884EC),
+      todayHighlightColor: Color(0XFFD7DFFB),
+      selectionMode: DateRangePickerSelectionMode.single,
     );
   }
 }
@@ -618,9 +652,9 @@ class dropdownLantai extends StatelessWidget {
                 hint: 'Choose The Room',
                 onChanged: (value) {
                   if (value != null) {
-                    controller.kurir.value = value['code'];
+                    controller.room.value = value['code'];
                   } else {
-                    controller.kurir.value = '';
+                    controller.room.value = '';
                   }
                 },
                 showClearButton: true,
@@ -638,7 +672,7 @@ class dropdownLantai extends StatelessWidget {
                       left: 20,
                       right: 20,
                     ),
-                    color: controller.kurir.value == item['code']
+                    color: controller.room.value == item['code']
                         ? Color(0XFF6884EC)
                         : Colors.transparent,
                     child: Column(
